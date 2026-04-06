@@ -1,0 +1,24 @@
+{
+  "workflow_type": "invoice_governance",
+  "input_payload": {
+    "invoice_id": "inv-fixture-1",
+    "vendor_id": "vn-100",
+    "amount": "100.00",
+    "currency": "USD",
+    "requestor_id": "req-1",
+    "line_items": [
+      {"description": "Subscription", "amount": "60.00"},
+      {"description": "Support", "amount": "40.00"}
+    ]
+  },
+  "actor": {
+    "actor_id": "user-1",
+    "role": "finance_manager",
+    "permissions": ["*"]
+  },
+  "budget": {
+    "currency": "USD",
+    "max_total": "5.00",
+    "soft_limit": "2.00"
+  }
+}

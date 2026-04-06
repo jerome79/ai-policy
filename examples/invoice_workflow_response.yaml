@@ -1,0 +1,5 @@
+status: blocked
+reason: Approval required for prepare_payment_instruction
+notes:
+  - policy decision surfaced
+  - workflow halted before high-risk action

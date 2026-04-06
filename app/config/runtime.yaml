@@ -1,0 +1,5 @@
+workflow_sequences:
+  invoice_governance:
+    - validate_invoice_data
+    - check_vendor_risk
+    - prepare_payment_instruction

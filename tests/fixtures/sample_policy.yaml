@@ -1,0 +1,4 @@
+deny_tools_by_role:
+  analyst:
+    - prepare_payment_instruction
+approval_required_at_or_above: high

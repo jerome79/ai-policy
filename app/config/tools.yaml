@@ -1,0 +1,10 @@
+tools:
+  - tool_id: validate_invoice_data
+    risk_level: low
+    estimated_cost: 0.05
+  - tool_id: check_vendor_risk
+    risk_level: medium
+    estimated_cost: 0.20
+  - tool_id: prepare_payment_instruction
+    risk_level: high
+    estimated_cost: 1.50
