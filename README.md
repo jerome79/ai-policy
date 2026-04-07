@@ -425,7 +425,8 @@ For a **guided walkthrough** (architecture, what each part does, how to test), s
 ## Run Example
 
 1. Install dependencies:
-   - `python -m pip install -e .[dev]`
+   - `python -m pip install -e ".[dev]"`  
+     On **PowerShell**, quote `".[dev]"` so `[dev]` is not treated as a wildcard.
 2. Run the invoice workflow example:
    - `python scripts/run_invoice_example.py`
 3. Inspect generated artifacts:

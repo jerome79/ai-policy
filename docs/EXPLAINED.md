@@ -113,8 +113,10 @@ Handlers are **pure mock logic**: validate numbers, mock vendor risk prefix `hr-
 From the repository root:
 
 ```bash
-python -m pip install -e .[dev]
+python -m pip install -e ".[dev]"
 ```
+
+On **PowerShell**, the quotes are required so `[dev]` is not parsed as a wildcard.
 
 ### 3.2 Run the full test suite
 

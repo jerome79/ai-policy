@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "policy-governed-agent-runtime"
 version = "0.1.0"
@@ -18,3 +22,8 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+# Only ship the `app` package; ignore runtime dirs like `artifacts/`.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
