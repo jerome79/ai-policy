@@ -8,6 +8,22 @@ class RiskLevel(str, Enum):
     CRITICAL = "critical"
 
 
+class WorkflowType(str, Enum):
+    INVOICE_GOVERNANCE = "invoice_governance"
+
+
+class ActorRole(str, Enum):
+    ANALYST = "analyst"
+    FINANCE_MANAGER = "finance_manager"
+
+
+class Permission(str, Enum):
+    ALL = "*"
+    INVOICE_READ = "invoice:read"
+    VENDOR_READ = "vendor:read"
+    PAYMENT_WRITE = "payment:write"
+
+
 class PolicyDecisionType(str, Enum):
     ALLOW = "allow"
     DENY = "deny"

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.models.common import RiskLevel
+from app.models.common import Permission, RiskLevel
 
 
 class ToolDefinition(BaseModel):
@@ -13,7 +13,7 @@ class ToolDefinition(BaseModel):
     description: str
     risk_level: RiskLevel
     estimated_cost: Decimal = Field(ge=0)
-    required_permissions: list[str] = Field(default_factory=list)
+    required_permissions: list[Permission] = Field(default_factory=list)
 
 
 class ToolInvocation(BaseModel):

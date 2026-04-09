@@ -32,3 +32,18 @@ def test_require_approval_is_surfaced() -> None:
     )
     decision = engine.evaluate(context)
     assert decision.decision == PolicyDecisionType.REQUIRE_APPROVAL
+
+
+def test_policy_allows_low_risk_tool_when_not_denied() -> None:
+    engine = PolicyEngine(
+        PolicyConfig(deny_tools_by_role={"analyst": ["prepare_payment_instruction"]}, approval_required_at_or_above=RiskLevel.HIGH)
+    )
+    context = PolicyContext(
+        workflow_type="invoice_governance",
+        actor=ActorContext(actor_id="a1", role="finance_manager", permissions=[]),
+        tool_id="validate_invoice_data",
+        tool_risk_level=RiskLevel.LOW,
+        spend_to_date=0.0,
+    )
+    decision = engine.evaluate(context)
+    assert decision.decision == PolicyDecisionType.ALLOW

@@ -4,13 +4,18 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from app.models.common import RunStatus, RuntimeState, PolicyDecisionType
+from app.models.common import (
+    PolicyDecisionType,
+    RunStatus,
+    RuntimeState,
+    WorkflowType,
+)
 from app.models.economics import BudgetConstraint
 from app.models.policy import ActorContext
 
 
 class WorkflowRequest(BaseModel):
-    workflow_type: str
+    workflow_type: WorkflowType
     input_payload: dict[str, Any]
     actor: ActorContext
     budget: BudgetConstraint
@@ -28,7 +33,7 @@ class WorkflowStepResult(BaseModel):
 
 class WorkflowRun(BaseModel):
     run_id: UUID = Field(default_factory=uuid4)
-    workflow_type: str
+    workflow_type: WorkflowType
     status: RunStatus = RunStatus.RUNNING
     current_state: RuntimeState = RuntimeState.RECEIVED
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
