@@ -1,14 +1,16 @@
-from app.models.audit import AuditEvent
+from app.models.audit import AuditEvent, AuditEventType, WorkflowAuditReport
 from app.models.common import PolicyDecisionType, RiskLevel, RunStatus, RuntimeState
 from app.models.economics import BudgetConstraint, BudgetStatus, CostRecord
 from app.models.invoice import InvoiceProcessingOutput, InvoiceWorkflowInput
 from app.models.policy import ActorContext, PolicyContext, PolicyDecision, PolicyRule
 from app.models.tool import ToolDefinition, ToolInvocation, ToolResult
+from app.models.risk import WorkflowRiskAssessment, WorkflowRiskLevel
 from app.models.workflow import WorkflowRequest, WorkflowRun, WorkflowStepResult
 
 __all__ = [
     "ActorContext",
     "AuditEvent",
+    "AuditEventType",
     "BudgetConstraint",
     "BudgetStatus",
     "CostRecord",
@@ -24,6 +26,9 @@ __all__ = [
     "ToolDefinition",
     "ToolInvocation",
     "ToolResult",
+    "WorkflowAuditReport",
+    "WorkflowRiskAssessment",
+    "WorkflowRiskLevel",
     "WorkflowRequest",
     "WorkflowRun",
     "WorkflowStepResult",

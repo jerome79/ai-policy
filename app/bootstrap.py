@@ -4,6 +4,7 @@ from app.economics.budget_guard import BudgetGuard
 from app.economics.cost_tracker import CostTracker
 from app.policy.approval import ApprovalService
 from app.policy.engine import PolicyEngine
+from app.policy.risk_engine import RiskEngine
 from app.policy.rules import PolicyConfig
 from app.runtime.orchestrator import WorkflowOrchestrator
 from app.runtime.workflow_runner import WorkflowRunner
@@ -32,13 +33,15 @@ def build_runner(base_path: Path) -> WorkflowRunner:
     for definition in default_tool_definitions():
         registry.register(definition=definition, handler=handlers[definition.tool_id])
 
+    risk_engine = RiskEngine()
     orchestrator = WorkflowOrchestrator(
         tool_registry=registry,
-        policy_engine=PolicyEngine(config=policy_config),
+        policy_engine=PolicyEngine(config=policy_config, risk_engine=risk_engine),
         approval_service=ApprovalService(),
         cost_tracker=CostTracker(),
         budget_guard=BudgetGuard(),
         audit_logger=AuditLogger(output_path=base_path / "artifacts" / "audit.jsonl"),
         run_store=RunStore(output_path=base_path / "artifacts" / "runs.jsonl"),
+        risk_engine=risk_engine,
     )
     return WorkflowRunner(orchestrator=orchestrator)

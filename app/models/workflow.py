@@ -12,6 +12,7 @@ from app.models.common import (
 )
 from app.models.economics import BudgetConstraint
 from app.models.policy import ActorContext
+from app.models.risk import WorkflowRiskAssessment
 
 
 class WorkflowRequest(BaseModel):
@@ -40,3 +41,6 @@ class WorkflowRun(BaseModel):
     ended_at: datetime | None = None
     steps: list[WorkflowStepResult] = Field(default_factory=list)
     final_output: dict[str, Any] | None = None
+    risk: WorkflowRiskAssessment | None = None
+    pending_step_id: str | None = None
+    pending_tool_id: str | None = None

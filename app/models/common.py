@@ -32,6 +32,7 @@ class PolicyDecisionType(str, Enum):
 
 class RunStatus(str, Enum):
     RUNNING = "running"
+    AWAITING_APPROVAL = "awaiting_approval"
     COMPLETED = "completed"
     BLOCKED = "blocked"
     FAILED = "failed"
@@ -41,6 +42,7 @@ class RuntimeState(str, Enum):
     RECEIVED = "received"
     VALIDATING = "validating"
     POLICY_CHECK = "policy_check"
+    AWAITING_APPROVAL = "awaiting_approval"
     EXECUTE_TOOL = "execute_tool"
     EVALUATE_BUDGET = "evaluate_budget"
     COMPLETED = "completed"

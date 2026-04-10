@@ -9,6 +9,7 @@ from app.models.policy import ActorContext
 from app.models.workflow import WorkflowRequest
 from app.policy.approval import ApprovalService
 from app.policy.engine import PolicyEngine
+from app.policy.risk_engine import RiskEngine
 from app.policy.rules import PolicyConfig
 from app.runtime.orchestrator import WorkflowOrchestrator
 from app.services.audit_logger import AuditLogger
@@ -32,14 +33,16 @@ def _build_orchestrator(tmp_path: Path, config: PolicyConfig) -> WorkflowOrchest
     for definition in default_tool_definitions():
         registry.register(definition=definition, handler=handlers[definition.tool_id])
 
+    risk_engine = RiskEngine()
     return WorkflowOrchestrator(
         tool_registry=registry,
-        policy_engine=PolicyEngine(config=config),
+        policy_engine=PolicyEngine(config=config, risk_engine=risk_engine),
         approval_service=ApprovalService(),
         cost_tracker=CostTracker(),
         budget_guard=BudgetGuard(),
         audit_logger=AuditLogger(output_path=tmp_path / "audit.jsonl"),
         run_store=RunStore(output_path=tmp_path / "runs.jsonl"),
+        risk_engine=risk_engine,
     )
 
 
@@ -93,9 +96,8 @@ def test_require_approval_decision_is_surfaced(tmp_path: Path) -> None:
         PolicyConfig(deny_tools_by_role={}, approval_required_at_or_above=RiskLevel.HIGH),
     )
     run = orchestrator.execute(_request())
-    assert run.status == RunStatus.BLOCKED
-    assert run.steps[-1].tool_id == "prepare_payment_instruction"
-    assert run.steps[-1].policy_decision.value == "require_approval"
+    assert run.status == RunStatus.AWAITING_APPROVAL
+    assert run.pending_tool_id == "prepare_payment_instruction"
 
 
 def test_workflow_stopped_by_hard_budget_in_orchestrator(tmp_path: Path) -> None:

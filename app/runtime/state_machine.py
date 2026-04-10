@@ -5,7 +5,8 @@ class StateMachine:
     _allowed_transitions: dict[RuntimeState, set[RuntimeState]] = {
         RuntimeState.RECEIVED: {RuntimeState.VALIDATING},
         RuntimeState.VALIDATING: {RuntimeState.POLICY_CHECK, RuntimeState.FAILED},
-        RuntimeState.POLICY_CHECK: {RuntimeState.EVALUATE_BUDGET, RuntimeState.BLOCKED},
+        RuntimeState.POLICY_CHECK: {RuntimeState.EVALUATE_BUDGET, RuntimeState.BLOCKED, RuntimeState.AWAITING_APPROVAL},
+        RuntimeState.AWAITING_APPROVAL: {RuntimeState.POLICY_CHECK, RuntimeState.BLOCKED},
         RuntimeState.EVALUATE_BUDGET: {RuntimeState.EXECUTE_TOOL, RuntimeState.BLOCKED},
         RuntimeState.EXECUTE_TOOL: {
             RuntimeState.POLICY_CHECK,
