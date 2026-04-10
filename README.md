@@ -184,16 +184,6 @@ pytest
 
 ---
 
-## Portfolio collateral
-
-Drafts for external publication (edit before posting):
-
-- [`docs/portfolio/medium_article_draft.md`](docs/portfolio/medium_article_draft.md)
-- [`docs/portfolio/linkedin_post_draft.md`](docs/portfolio/linkedin_post_draft.md)
-- [`docs/portfolio/upwork_case_study_summary.md`](docs/portfolio/upwork_case_study_summary.md)
-
----
-
 ## Tech stack
 
 - Python 3.11+
