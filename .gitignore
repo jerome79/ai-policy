@@ -30,3 +30,6 @@ Thumbs.db
 # Env secrets
 .env
 .env.*
+
+# Local-only portfolio / outreach drafts (not published with the repo)
+docs/portfolio/
