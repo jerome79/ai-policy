@@ -23,6 +23,27 @@ Autonomous agents fail in production for the same reasons other distributed syst
 | **Evaluation** (`app/evaluation/`) | Synthetic scenario harness for regression-style governance checks. |
 | **Observability** (`app/observability/`) | Aggregates metrics from `artifacts/*.jsonl` for reporting. |
 
+## Execution Flow (Simplified)
+
+```text
+[Request]
+    ↓
+[Orchestrator / State Machine]
+    ↓
+[Policy Engine] ── deny ──> [STOP]
+    ↓ allow / require_approval
+[Risk Engine]
+    ↓
+[Approval Gate] ── pause ──> [AWAITING APPROVAL]
+    ↓ approved
+[Tool Registry]
+    ↓
+[Cost Tracker]
+    ↓
+[Audit Logger]
+    ↓
+[Final Outcome]
+
 ```text
 Request → Orchestrator → PolicyEngine / Risk → BudgetGuard → ToolRegistry → Audit + RunStore
                 ↘ Approval gate (require_approval) ↙
@@ -39,6 +60,21 @@ For a guided walkthrough of modules and the invoice workflow, see [`docs/EXPLAIN
 - **Approvals** for high-impact steps: pause, decide, resume; outcomes recorded in audit events.
 - **Budget guardrails** with soft warnings and hard stops; per-step `cost_update` events.
 - **Audit trail** (`artifacts/audit.jsonl`) and **run history** (`artifacts/runs.jsonl`) correlated by `run_id`.
+
+### Example decision flow
+
+A workflow attempting a payment instruction after a medium-risk vendor check will:
+
+1. Pass through policy evaluation → `require_approval`
+2. Be classified as `medium` or `high` risk
+3. Enter `AWAITING_APPROVAL` state
+4. Record an audit trail with:
+   - policy decision
+   - risk reasoning
+   - attempted tool
+5. Resume only after explicit approval
+
+This ensures that high-impact actions cannot execute without traceable human intervention.
 
 ---
 

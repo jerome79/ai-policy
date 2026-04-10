@@ -28,7 +28,13 @@ This is a portfolio-grade reference, not a production appliance. There is no cla
 
 **Closing thought**
 
-If AI agents are to operate next to real processes, we should evaluate them like systems: interfaces, invariants, failure modes, and logs. Prompts matter; **runtime governance** is what makes that operational.
+If AI agents are to operate next to real processes, we must evaluate them like systems: interfaces, invariants, failure modes, and logs.
+
+Models generate decisions.
+
+But it is the runtime that determines whether those decisions are allowed to execute.
+
+That is where the next generation of AI systems will differentiate.
 
 ---
 

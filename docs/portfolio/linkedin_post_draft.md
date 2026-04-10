@@ -1,3 +1,6 @@
+AI agents don’t fail because models are weak.
+They fail because systems lack control.
+
 Agents that call tools need more than better prompts — they need **runtime governance**.
 
 Most AI systems today focus on model behavior.  
