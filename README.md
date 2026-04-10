@@ -1,445 +1,171 @@
 # Policy-Governed AI Agent Runtime
 
-This repository defines a portfolio-grade architecture for running autonomous AI workflows under enterprise governance constraints:
-
-- policy constraints
-- economic cost controls
-- risk thresholds
-- auditability requirements
-- human-in-the-loop approvals
-- evaluation discipline
-
-The strategic intent is to demonstrate production-oriented AI governance architecture, not a toy agent demo.
-
-## Core Thesis
-
-We are building a governed execution environment for AI workflows.
-
-The core challenge is not just tool calling or agent connectivity. It is governance and control:
-
-- controlling agent execution
-- governing tool usage
-- enforcing cost budgets
-- classifying and managing risk
-- requiring human approval for high-risk actions
-- logging and auditing every decision
-- evaluating runtime behavior systematically
-
-## Phase 1 Scope
-
-Phase 1 includes:
-
-- architecture proposal
-- folder structure
-- domain models
-- orchestrator skeleton
-- tool registry
-- policy engine
-- cost tracker
-- one mocked invoice governance workflow
-- sample YAML config
-- basic tests
-- README draft
-
-## Non-Goals
-
-- no fancy frontend
-- no Kubernetes
-- no distributed infrastructure
-- no complex cloud deployment
-- no chatbot UX
-- no unrelated AI features outside governance/economics/control
-
-## Preferred Stack
-
-- Python 3.11+
-- FastAPI
-- Pydantic
-- YAML config
-- state machine style orchestration
-- pluggable tool registry
-- structured logs
-- local file persistence acceptable for v1
-- Docker-ready structure
-- tests included
-
-## Proposed Architecture
-
-The runtime is designed as a layered governance system with strict separation of concerns.
-
-### 1) Inbound Layer (API / Request Handling)
-
-- Receives workflow execution requests (`workflow_type`, `inputs`, `request_context`)
-- Validates contracts with Pydantic
-- Assigns `workflow_run_id` and correlation metadata
-- Delegates execution to orchestrator only (no domain logic in routes)
-
-### 2) Orchestration Layer (State-Machine Runtime)
-
-- Executes workflow via explicit states:
-  - `received -> validating -> policy_check -> execute_tool -> evaluate_budget -> completed/blocked/failed`
-- Maintains deterministic step-by-step execution trace
-- Never calls tools directly; all calls flow through governed registry interface
-
-### 3) Governance Layer (Policy Engine + Approval Gate)
-
-- Evaluates actor permissions, tool allow/deny rules, risk thresholds, and workflow constraints
-- Produces `PolicyDecision`:
-  - `allow`
-  - `deny`
-  - `require_approval`
-- Captures reasons and matched rules
-- Approval service (v1 local stub) pauses/resumes high-risk actions
-
-### 4) Economics Layer (Cost Tracker + Budget Guardrails)
-
-- Tracks estimated and actual run cost per step and per workflow run
-- Enforces:
-  - soft warning threshold
-  - hard stop threshold
-- Emits economics events into audit trail
-
-### 5) Tool Execution Layer (Pluggable Tool Registry)
-
-- Central registry for tool definitions and handlers
-- Tool metadata includes:
-  - tool id/version
-  - risk level
-  - cost profile
-  - required permissions
-  - input/output schemas
-- Runtime can execute only registered tools through a uniform interface
-
-### 6) Audit & Persistence Layer
-
-- Structured logging for all governance-critical events:
-  - request received
-  - policy evaluation
-  - approval requested/granted/denied
-  - tool invocation/result
-  - budget update/stop decision
-  - run completion/failure
-- v1 persistence target: local JSONL (SQLite can be introduced in Phase 2)
-
-### 7) Evaluation Layer (Phase 1 baseline)
-
-- Test harness validates policy outcomes, budget behavior, and state transitions
-- Stores execution artifacts for governance review and reproducibility
-
-## Proposed Repository Structure
-
-```text
-policy-governed-agent-runtime/
-  app/
-    api/
-      __init__.py
-      main.py
-      routes/
-        __init__.py
-        workflow_routes.py
-      schemas/
-        __init__.py
-        workflow_api_models.py
-
-    runtime/
-      __init__.py
-      orchestrator.py
-      state_machine.py
-      execution_context.py
-      workflow_runner.py
-
-    tools/
-      __init__.py
-      base.py
-      registry.py
-      definitions.py
-      handlers/
-        __init__.py
-        invoice_tools.py
-
-    policy/
-      __init__.py
-      engine.py
-      rules.py
-      approval.py
-      evaluators/
-        __init__.py
-        risk_evaluator.py
-        permission_evaluator.py
-
-    economics/
-      __init__.py
-      cost_tracker.py
-      budget_guard.py
-      pricing.py
-
-    models/
-      __init__.py
-      common.py
-      workflow.py
-      tool.py
-      policy.py
-      economics.py
-      audit.py
-      invoice.py
-
-    services/
-      __init__.py
-      audit_logger.py
-      run_store.py
-      config_loader.py
-      clock.py
-
-    config/
-      policy.yaml
-      tools.yaml
-      runtime.yaml
-
-  tests/
-    unit/
-      test_policy_engine.py
-      test_cost_tracker.py
-      test_tool_registry.py
-      test_orchestrator_invoice_flow.py
-    integration/
-      test_invoice_workflow_end_to_end.py
-    fixtures/
-      sample_workflow_request.json
-      sample_policy.yaml
-
-  docs/
-    architecture.md
-    governance-model.md
-    phase1-decisions.md
-
-  examples/
-    invoice_workflow_request.yaml
-    invoice_workflow_response.yaml
-
-  scripts/
-    run_api.py
-    run_invoice_example.py
-
-  README.md
-  pyproject.toml
-  Dockerfile
-  .env.example
-```
-
-## Key Domain Models (Pydantic-First)
-
-These are the minimum contracts for a credible governance runtime.
-
-### Workflow Contracts
-
-- `WorkflowRequest`
-  - `workflow_type: str`
-  - `input_payload: dict[str, Any]`
-  - `actor: ActorContext`
-  - `budget: BudgetConstraint`
-  - `risk_tolerance: RiskLevel`
-  - `metadata: dict[str, str]`
-
-- `WorkflowRun`
-  - `run_id: UUID`
-  - `status: RunStatus`
-  - `current_state: RuntimeState`
-  - `started_at`, `ended_at`
-  - `steps: list[WorkflowStepResult]`
-  - `final_output: dict[str, Any] | None`
-
-### Tooling Contracts
-
-- `ToolDefinition`
-  - `tool_id`
-  - `version`
-  - `description`
-  - `risk_level`
-  - `estimated_cost`
-  - `input_schema_ref`, `output_schema_ref`
-  - `required_permissions`
-
-- `ToolInvocation`
-  - `run_id`
-  - `step_id`
-  - `tool_id`
-  - `input_payload`
-
-- `ToolResult`
-  - `success: bool`
-  - `output_payload`
-  - `error`
-  - `cost_actual`
-
-### Policy Contracts
-
-- `PolicyContext`
-  - actor, tool definition, workflow context, environment, spend-to-date
-
-- `PolicyDecision`
-  - `decision: Literal["allow", "deny", "require_approval"]`
-  - `reasons: list[str]`
-  - `matched_rules: list[str]`
-  - `risk_score: float`
-
-- `PolicyRule`
-  - rule id, condition config/expression, effect, priority
-
-### Economics Contracts
-
-- `BudgetConstraint`
-  - `currency`
-  - `max_total`
-  - `soft_limit`
-
-- `CostRecord`
-  - `run_id`, `step_id`, `tool_id`
-  - `estimated_cost`, `actual_cost`, `timestamp`
-
-- `BudgetStatus`
-  - `spent_total`
-  - `remaining`
-  - `is_soft_limit_reached`
-  - `is_hard_limit_exceeded`
-
-### Audit Contracts
-
-- `AuditEvent`
-  - `event_id`, `run_id`, `event_type`, `timestamp`
-  - `actor`
-  - `payload: dict[str, Any]`
-  - `decision_refs: list[str]`
-
-- `ExecutionTrace`
-  - ordered list of audit events for replay and governance review
-
-### Invoice Workflow Contracts (Vertical Anchor)
-
-- `InvoiceWorkflowInput`
-  - invoice id/vendor/amount/currency/line items/requestor
-- `InvoiceValidationResult`
-- `InvoiceApprovalDecision`
-- `InvoiceProcessingOutput`
-  - final status + policy/economic evidence summary
-
-## Phase 1 Implementation Plan
-
-### Step 1: Project Scaffold + Config
-
-- Create package structure and module stubs
-- Add `pyproject.toml` with minimal dependencies
-- Add YAML configs:
-  - `policy.yaml`
-  - `tools.yaml`
-  - `runtime.yaml`
-
-### Step 2: Domain Models
-
-- Implement strongly typed Pydantic models in `app/models/`
-- Add enums for run state/status/risk/policy decisions
-- Add audit-safe serialization helpers
-
-### Step 3: Tool Registry
-
-- Build `ToolRegistry` abstraction and in-memory implementation
-- Validate registration metadata and schemas
-- Add mocked invoice tools:
-  - `validate_invoice_data`
-  - `check_vendor_risk`
-  - `prepare_payment_instruction` (high-risk mock)
-
-### Step 4: Policy Engine + Approval Stub
-
-- Implement rules evaluation pipeline from YAML
-- Return deterministic `PolicyDecision` with reasons/matched rules
-- Add approval gate stub for `require_approval` flows
-
-### Step 5: Cost Tracker + Budget Guard
-
-- Track estimated and actual costs by run and step
-- Enforce soft/hard budget thresholds before each tool action
-- Emit budget events to audit trail
-
-### Step 6: Runtime Orchestrator Skeleton
-
-- Build state-machine execution runner
-- Pipeline per step:
-  - validate
-  - policy check
-  - budget check
-  - execute tool
-  - log/audit
-  - continue/stop
-
-### Step 7: Mocked Invoice Governance Workflow
-
-- Implement invoice governance step sequence
-- Cover scenarios:
-  - normal approval path
-  - policy deny path
-  - require-approval path
-  - budget exceeded stop path
-
-### Step 8: API Surface + Scripts
-
-- FastAPI endpoints:
-  - `POST /workflows/execute`
-  - `GET /workflows/{run_id}`
-- Add scripts for local example execution
-
-### Step 9: Tests
-
-- Unit tests:
-  - policy engine
-  - cost tracker
-  - tool registry
-  - orchestrator transitions
-- Integration test:
-  - invoice workflow end-to-end including audit assertions
-
-### Step 10: Documentation Baseline
-
-- Architecture rationale
-- Governance guarantees
-- Operational run instructions
-- Testing instructions
-- Phase 2 roadmap hooks
-
-## Required Modules Checklist
-
-1. runtime / orchestrator
-2. tool registry
-3. policy engine
-4. economics / cost tracker
-5. models
-6. example workflow
-7. tests
-8. README
+A **portfolio-grade backend reference** for running LLM-adjacent workflows under explicit **policy**, **economics**, **risk**, **human approval**, and **audit** constraints. The emphasis is on *governed execution*—not chat UX, not model training, and not hand-wavy “safety” copy.
 
 ---
 
-Phase 1 scaffold is now implemented in this repository.
+## Project thesis
 
-For a **guided walkthrough** (architecture, what each part does, how to test), see [`docs/EXPLAINED.md`](docs/EXPLAINED.md).
+Autonomous agents fail in production for the same reasons other distributed systems fail: unclear control points, unbounded side effects, opaque decisions, and weak evidence trails. This repository models AI workflow execution as an **operable system**: every tool transition is validated, policy-scored, budget-checked, optionally human-approved, and logged with structured reasons. Prompting matters; **runtime governance** is what makes behavior reviewable and repeatable.
 
-## Run Example
+---
 
-1. Install dependencies:
-   - `python -m pip install -e ".[dev]"`  
-     On **PowerShell**, quote `".[dev]"` so `[dev]` is not treated as a wildcard.
-2. Run the invoice workflow example:
-   - `python scripts/run_invoice_example.py`
-3. Inspect generated artifacts:
-   - `artifacts/audit.jsonl`
-   - `artifacts/runs.jsonl`
+## Architecture overview
 
-## Run Tests
+| Layer | Responsibility |
+|--------|------------------|
+| **API** (`app/api/`) | Validates requests, delegates to the orchestrator, no domain logic in routes. |
+| **Runtime** (`app/runtime/`) | State-machine execution: validate → policy → budget → execute → terminal states. |
+| **Policy & risk** (`app/policy/`) | `PolicyDecision` (`allow` / `deny` / `require_approval`), rules from YAML, risk classification. |
+| **Economics** (`app/economics/`) | Cost tracking and soft/hard budget enforcement. |
+| **Tools** (`app/tools/`) | Registry + mocked invoice workflow handlers. |
+| **Services** (`app/services/`) | Audit logger and JSONL run store under `artifacts/`. |
+| **Evaluation** (`app/evaluation/`) | Synthetic scenario harness for regression-style governance checks. |
+| **Observability** (`app/observability/`) | Aggregates metrics from `artifacts/*.jsonl` for reporting. |
 
-- Run all tests:
-  - `pytest`
-- Required scenarios covered:
-  - allowed tool call
-  - denied tool call by policy
-  - workflow stopped by hard budget
-  - `require_approval` decision surfaced
-  - happy path invoice workflow
+```text
+Request → Orchestrator → PolicyEngine / Risk → BudgetGuard → ToolRegistry → Audit + RunStore
+                ↘ Approval gate (require_approval) ↙
+```
+
+For a guided walkthrough of modules and the invoice workflow, see [`docs/EXPLAINED.md`](docs/EXPLAINED.md).
+
+---
+
+## Governance primitives
+
+- **Policy decisions** with `reasons` and `matched_rules` (traceable to configuration).
+- **Risk levels** derived from scoring thresholds (configurable), aligned with tool and workflow context.
+- **Approvals** for high-impact steps: pause, decide, resume; outcomes recorded in audit events.
+- **Budget guardrails** with soft warnings and hard stops; per-step `cost_update` events.
+- **Audit trail** (`artifacts/audit.jsonl`) and **run history** (`artifacts/runs.jsonl`) correlated by `run_id`.
+
+---
+
+## Validation results (Phase 2 / Week 2)
+
+Synthetic governance validation (evaluation harness + audit checks) on the reference runtime:
+
+| Metric | Result |
+|--------|--------|
+| Scenarios executed | 24 |
+| Failed scenarios | 0 |
+| Policy correctness | 1.00 |
+| Approval routing correctness | 1.00 |
+| Risk classification consistency | 1.00 |
+| Budget enforcement correctness | 1.00 |
+| Policy trace correctness | 1.00 |
+| Approval lifecycle correctness | 1.00 |
+
+Artifacts: `artifacts/validation_report.md`, `artifacts/validation_results.json`, `artifacts/phase2_evaluation.json`.
+
+---
+
+## Observability and summary reporting
+
+Aggregate operational metrics from local JSONL logs:
+
+- Total workflows (distinct `run_id` in `runs.jsonl`)
+- Risk distribution (latest snapshot per run—see report footnote)
+- Approval-required rate and approval outcomes (from audit events)
+- Policy deny counts (audit `policy_decision` with `deny`)
+- Failure and terminal status counts (`failed`, `blocked`, etc.)
+- Average cost per run (from audit `cost_update` rollups) and average steps per run
+
+**Generate reports:**
+
+```bash
+python scripts/generate_runtime_summary.py
+```
+
+Outputs:
+
+- `artifacts/runtime_summary.json`
+- `artifacts/runtime_summary.md`
+
+Optional paths: `--runs`, `--audit`, `--json-out`, `--markdown-out`, `--base-path`.
+
+---
+
+## Business value
+
+A concise, non-hyped framing for operators and stakeholders is in [`docs/business_summary.md`](docs/business_summary.md) (operational control, governance, risk reduction, auditability).
+
+---
+
+## Limitations (intentional for v1)
+
+- **Reference implementation**, not a hosted product: single-process, JSONL persistence, mocked tools.
+- **No production identity/IAM**, no multi-tenant isolation, no HA deployment story in-repo.
+- **Risk and policy YAML** are illustrative; real enterprises need joint review with legal/compliance.
+- **Latest-run risk metrics** in summaries reflect the last persisted snapshot, not necessarily ingress-only risk.
+
+---
+
+## Roadmap (v2 directions)
+
+- Durable store (SQLite/Postgres) and retention policies for audit.
+- Pluggable policy backends (OPA, enterprise IAM) and secret management.
+- Richer approval UX (tickets, SLAs) and idempotent webhooks.
+- OpenTelemetry metrics/traces alongside JSONL.
+- Additional vertical workflows sharing the same governance spine.
+
+---
+
+## Quick start
+
+**Install** (quote `".[dev]"` in PowerShell so `[dev]` is not treated as a wildcard):
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+**Run the invoice example**
+
+```bash
+python scripts/run_invoice_example.py
+```
+
+**Run governance evaluation (Phase 2)**
+
+```bash
+python scripts/run_phase2_evaluation.py
+```
+
+**Start the API** (optional)
+
+```bash
+python scripts/run_api.py
+```
+
+**Tests**
+
+```bash
+pytest
+```
+
+**Artifacts** (after runs): `artifacts/audit.jsonl`, `artifacts/runs.jsonl`.
+
+---
+
+## Portfolio collateral
+
+Drafts for external publication (edit before posting):
+
+- [`docs/portfolio/medium_article_draft.md`](docs/portfolio/medium_article_draft.md)
+- [`docs/portfolio/linkedin_post_draft.md`](docs/portfolio/linkedin_post_draft.md)
+- [`docs/portfolio/upwork_case_study_summary.md`](docs/portfolio/upwork_case_study_summary.md)
+
+---
+
+## Tech stack
+
+- Python 3.11+
+- FastAPI, Pydantic v2, PyYAML, Uvicorn
+- pytest
+
+---
+
+## License / use
+
+Treat this repository as an **engineering showcase**. Adapt patterns responsibly; production deployments require threat modeling, access control, and organizational process beyond this codebase.
